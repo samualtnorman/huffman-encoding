@@ -1,0 +1,26 @@
+{
+  "name": "huffman-encoding",
+  "version": "0.0.0",
+  "description": "module that exports basic huffman encoder and decoder but with different method for storing the tree",
+  "main": "main.mjs",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/samualtnorman/huffman-encoding.git"
+  },
+  "keywords": [
+    "huffman",
+    "encoding",
+    "compression",
+    "encoder",
+    "decoder"
+  ],
+  "author": "Samual Norman",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/samualtnorman/huffman-encoding/issues"
+  },
+  "homepage": "https://github.com/samualtnorman/huffman-encoding#readme"
+}
