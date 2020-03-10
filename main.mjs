@@ -2,6 +2,7 @@
 
 console.time();
 console.log(encode("Hello, World!"));
+//console.log(decodeTree([ 1, 2, 2, 4 ]))
 console.timeEnd();
 
 export function encode(string) {
@@ -50,9 +51,7 @@ export function encode(string) {
 			i++;
 		}
 
-		tree.push(0);
-
-		treeNodeCounts.push(tree);
+		treeNodeCounts.push(decodeTree(tree)[v].toString(2));
 		max = v * 2;
 	}
 
@@ -72,8 +71,23 @@ export function decode() {
 	
 }
 
-function decodeTree(tree, values) {
-	let o = {};
+function decodeTree(tree) {
+	let keys = [ 0b10n, 0b11n ];
 
-	// todo: map values to huffman binary
+	tree.shift();
+
+	for (let nodeCount of tree) {
+		let temp = [];
+
+		for (let i = 0; i < nodeCount; i++) {
+			let a = keys.shift();
+
+			temp.push(a << 1n);
+			temp.push((a << 1n) + 1n);
+		}
+
+		keys.unshift(...temp);
+	}
+
+	return keys;
 }
