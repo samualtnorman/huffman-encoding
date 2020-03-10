@@ -2,7 +2,7 @@
 
 console.time();
 console.log(encode("Hello, World!"));
-//console.log(decodeTree([ 1, 2, 2, 4 ]))
+//console.log(decodeTree([ 1, 2, 2, 4 ]).map(a => a.toString(2).substring(1)))
 console.timeEnd();
 
 export function encode(string) {
@@ -51,7 +51,7 @@ export function encode(string) {
 			i++;
 		}
 
-		treeNodeCounts.push(decodeTree(tree)[v].toString(2));
+		treeNodeCounts.push(decodeTree(tree)[v].toString(2).substring(1));
 		max = v * 2;
 	}
 
@@ -72,15 +72,13 @@ export function decode() {
 }
 
 function decodeTree(tree) {
-	let keys = [ 0b10n, 0b11n ];
-
-	tree.shift();
+	let keys = [];
 
 	for (let nodeCount of tree) {
 		let temp = [];
 
 		for (let i = 0; i < nodeCount; i++) {
-			let a = keys.shift();
+			let a = keys.shift() || 1n;
 
 			temp.push(a << 1n);
 			temp.push((a << 1n) + 1n);
