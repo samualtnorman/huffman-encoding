@@ -1,34 +1,23 @@
 "use strict";
 
-console.time();
-console.log(encode("Hello, World!"));
-//console.log(decodeTree([ 1, 2, 2, 4 ]).map(a => a.toString(2).substring(1)))
-console.timeEnd();
+export function encode(buffer) {
+	let nodes = Object.entries(countArrayItems(buffer)).map(([ character, frequency ]) => ({ character, frequency }));
 
-export function encode(string) {
-	let characterUsages = {};
+	while (nodes.length != 1) {
+		nodes.sort((a, b) => b.frequency - a.frequency);
 
-	for (let char of string)
-		characterUsages[char] = characterUsages[char] + 1 || 1;
+		const left  = nodes.pop(),
+			  right = nodes.pop();
 
-	characterUsages = Object.entries(characterUsages).map(([ character, frequency ]) => ({ character, frequency }));
-
-	while (characterUsages.length != 1) {
-		characterUsages.sort((a, b) => b.frequency - a.frequency);
-
-		const left  = characterUsages.pop(),
-			  right = characterUsages.pop();
-		
-
-		characterUsages.push({ left, right, frequency: left.frequency + right.frequency });
+		nodes.push({ left, right, frequency: left.frequency + right.frequency });
 	}
 
 	const layers = [];
 
-	for (let [ char, depth ] of Object.entries(getDepths(characterUsages.pop())))
+	for (let [ char, depth ] of Object.entries(getDepths(nodes.pop())))
 		(layers[depth] = layers[depth] || []).push(char);
-	
-	const treeNodeCounts = [];
+
+	let o = "";
 
 	let max = 1;
 
@@ -51,13 +40,15 @@ export function encode(string) {
 			i++;
 		}
 
-		treeNodeCounts.push(decodeTree(tree)[v].toString(2).substring(1));
+		o += decodeTree(tree)[v].toString(2).substring(1);
 		max = v * 2;
 	}
 
-	// todo: convert treeNodeCounts to huffman encoded values
+	return o + layers.flat().reverse().map(a => {
+		let b = parseInt(a).toString(2);
 
-	return [ ...treeNodeCounts, ...layers.flat().reverse() ];
+		return "0".repeat(8 - b.length) + b;
+	}).join("");
 
 	function getDepths(tree, layer = 0) {
 		if (tree.character)
@@ -67,21 +58,30 @@ export function encode(string) {
 	}
 }
 
+function countArrayItems(array) {
+	const usages = {};
+
+	for (let item of array)
+		usages[item] = usages[item] + 1 || 1;
+
+	return usages;
+}
+
 export function decode() {
 	
 }
 
 function decodeTree(tree) {
-	let keys = [];
+	const keys = [];
 
 	for (let nodeCount of tree) {
-		let temp = [];
+		const temp = [];
 
 		for (let i = 0; i < nodeCount; i++) {
-			let a = keys.shift() || 1n;
+			const a = keys.shift() || 1;
 
-			temp.push(a << 1n);
-			temp.push((a << 1n) + 1n);
+			temp.push(a << 1);
+			temp.push((a << 1) + 1);
 		}
 
 		keys.unshift(...temp);
