@@ -23,7 +23,5 @@
     "url": "https://github.com/samualtnorman/huffman-encoding/issues"
   },
   "homepage": "https://github.com/samualtnorman/huffman-encoding#readme",
-  "dependencies": {
-    "bytestreamjs": "^1.0.29"
-  }
+  "dependencies": {}
 }

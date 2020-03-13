@@ -1,11 +1,79 @@
 "use strict";
 
-import bytestreamjs from "bytestreamjs";
+class BitStream {
+	length = 0;
 
-const { BitStream } = bytestreamjs;
+	constructor(...elements) {
+		this.buffer = new Uint8Array;
+		this.push(...elements);
+	}
+
+	push(...elements) {
+		let byteCount = Math.ceil((this.length + elements.length) / 8);
+
+		if (byteCount > this.buffer.length) {
+			let oldBuffer = this.buffer;
+			this.buffer = new Uint8Array(byteCount);
+			this.buffer.set(oldBuffer);
+		}
+
+		for (let element of elements) {
+			let byteI = Math.floor(this.length / 8),
+				byte = this.buffer[byteI],
+				mask = 0b10000000 >> (this.length++ % 8);
+
+			this.buffer[byteI] = element ? byte | mask : byte & ~mask;
+		}
+
+		return this.length;
+	}
+
+	pushString(...string) {
+		string = string.join("");
+
+		let byteCount = Math.ceil((this.length + string.length * 8) / 8);
+
+		if (byteCount > this.buffer.length) {
+			let oldBuffer = this.buffer;
+			this.buffer = new Uint8Array(byteCount);
+			this.buffer.set(oldBuffer);
+		}
+
+		for (let i = 0; i < string.length; i++)
+			for (let j = 8; j--;) {
+				let byteI = Math.floor(this.length / 8),
+					byte = this.buffer[byteI],
+					mask = 0b10000000 >> (this.length++ % 8);
+
+				this.buffer[byteI] = (string.charCodeAt(i) & (1 << j)) ? byte | mask : byte & ~mask;
+			}
+
+		return this.length;
+
+		//this.push(...strings.join("").split("").map(c => c.charCodeAt(0).toString(2).split("").map(a => Number(a))).flat());
+	}
+
+	[Symbol.iterator]() {
+		let i         = 0,
+		    bitStream = this;
+
+		return {
+			next() {
+				let o = { value: undefined, done: false };
+
+				if (i < bitStream.length)
+					o.value = !!(bitStream.buffer[Math.floor(bitStream.length / 8)] & (0b10000000 >> (i++ % 8)));
+				else
+					o.done = true;
+
+				return o;
+			}
+		}
+	}
+}
 
 export function encode(buffer) {
-	let nodes = Object.entries(countArrayItems(buffer)).map(([ character, frequency ]) => ({ character, frequency }));
+	let nodes = Object.entries(countArrayItems(buffer)).map(([ byte, frequency ]) => ({ byte, frequency }));
 
 	while (nodes.length != 1) {
 		nodes.sort((a, b) => b.frequency - a.frequency);
@@ -21,43 +89,51 @@ export function encode(buffer) {
 	for (let [ char, depth ] of Object.entries(getDepths(nodes.pop())))
 		(layers[depth] = layers[depth] || []).push(char);
 
-	let o = new BitStream;
-
-	let max = 1;
+	let bitStream = new BitStream,
+		max = 1,
+		tree = [];
 
 	for (let layer of layers) {
 		layer = layer || [];
 
 		let v = max - layer.length,
 			i = 0,
-			tree = [];
+			metaTree = [];
+		
+		tree.push(v);
 
 		while (max) {
 			if (max < 2 ** i) {
-				tree.push(max);
+				metaTree.push(max);
 				max = 0;
 			} else {
-				tree.push(2 ** i);
+				metaTree.push(2 ** i);
 				max -= 2 ** i;
 			}
 
 			i++;
 		}
 
-		o.append(decodeTree(tree)[v]);
+		bitStream.push(...decodeTree(metaTree)[v]);
 
 		max = v * 2;
 	}
 
-	for (let byte of layers.flat().reverse())
-		for (let i = 0; i < 8; i++)
-			o.append(Number(!!(parseInt(byte) & (0b10000000 >> i))));
+	let keys = layers.flat().reverse().map(Number),
+		encodedBytes = decodeTree(tree);
+	
+	bitStream.pushString(...keys);
 
-	return o.view;
+	//console.log(JSON.stringify(keys));
+
+	for (let byte of buffer)
+		bitStream.push(...encodedBytes[keys.indexOf(byte)]);
+	
+	return bitStream.buffer;
 
 	function getDepths(tree, layer = 0) {
-		if (tree.character)
-			return { [tree.character]: layer };
+		if (tree.byte)
+			return { [tree.byte]: layer };
 		
 		return { ...getDepths(tree.left, layer + 1), ...getDepths(tree.right, layer + 1) };
 	}
@@ -83,14 +159,10 @@ function decodeTree(tree) {
 		const newKeys = [];
 
 		for (let i = 0; i < nodeCount; i++) {
-			const original = keys.shift() || new BitStream,
-				  left     = new BitStream(original),
-				  right    = new BitStream(original);
+			const original = keys.shift() || new BitStream;
 			
-			left.append(0);
-			right.append(1);
-			newKeys.push(left);
-			newKeys.push(right);
+			newKeys.push(new BitStream(...original, 0));
+			newKeys.push(new BitStream(...original, 1));
 		}
 
 		keys.unshift(...newKeys);
