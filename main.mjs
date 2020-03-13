@@ -1,5 +1,9 @@
 "use strict";
 
+import bytestreamjs from "bytestreamjs";
+
+const { BitStream } = bytestreamjs;
+
 export function encode(buffer) {
 	let nodes = Object.entries(countArrayItems(buffer)).map(([ character, frequency ]) => ({ character, frequency }));
 
@@ -17,7 +21,7 @@ export function encode(buffer) {
 	for (let [ char, depth ] of Object.entries(getDepths(nodes.pop())))
 		(layers[depth] = layers[depth] || []).push(char);
 
-	let o = "";
+	let o = new BitStream;
 
 	let max = 1;
 
@@ -40,15 +44,16 @@ export function encode(buffer) {
 			i++;
 		}
 
-		o += decodeTree(tree)[v].toString(2).substring(1);
+		o.append(decodeTree(tree)[v]);
+
 		max = v * 2;
 	}
 
-	return o + layers.flat().reverse().map(a => {
-		let b = parseInt(a).toString(2);
+	for (let byte of layers.flat().reverse())
+		for (let i = 0; i < 8; i++)
+			o.append(Number(!!(parseInt(byte) & (0b10000000 >> i))));
 
-		return "0".repeat(8 - b.length) + b;
-	}).join("");
+	return o.view;
 
 	function getDepths(tree, layer = 0) {
 		if (tree.character)
@@ -75,16 +80,20 @@ function decodeTree(tree) {
 	const keys = [];
 
 	for (let nodeCount of tree) {
-		const temp = [];
+		const newKeys = [];
 
 		for (let i = 0; i < nodeCount; i++) {
-			const a = keys.shift() || 1;
-
-			temp.push(a << 1);
-			temp.push((a << 1) + 1);
+			const original = keys.shift() || new BitStream,
+				  left     = new BitStream(original),
+				  right    = new BitStream(original);
+			
+			left.append(0);
+			right.append(1);
+			newKeys.push(left);
+			newKeys.push(right);
 		}
 
-		keys.unshift(...temp);
+		keys.unshift(...newKeys);
 	}
 
 	return keys;

@@ -4,7 +4,7 @@
   "description": "module that exports basic huffman encoder and decoder but with different method for storing the tree",
   "main": "main.mjs",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node test.mjs"
   },
   "repository": {
     "type": "git",
@@ -22,5 +22,8 @@
   "bugs": {
     "url": "https://github.com/samualtnorman/huffman-encoding/issues"
   },
-  "homepage": "https://github.com/samualtnorman/huffman-encoding#readme"
+  "homepage": "https://github.com/samualtnorman/huffman-encoding#readme",
+  "dependencies": {
+    "bytestreamjs": "^1.0.29"
+  }
 }
