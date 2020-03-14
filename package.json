@@ -2,9 +2,10 @@
   "name": "huffman-encoding",
   "version": "0.0.0",
   "description": "module that exports basic huffman encoder and decoder but with different method for storing the tree",
-  "main": "main.mjs",
+  "main": "built/main",
   "scripts": {
-    "test": "node test.mjs"
+    "test": "node built/test",
+    "build": "./node_modules/.bin/tsc"
   },
   "repository": {
     "type": "git",
@@ -23,5 +24,8 @@
     "url": "https://github.com/samualtnorman/huffman-encoding/issues"
   },
   "homepage": "https://github.com/samualtnorman/huffman-encoding#readme",
-  "dependencies": {}
+  "dependencies": {
+    "@types/node": "^13.9.1",
+    "typescript": "^3.8.3"
+  }
 }
