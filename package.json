@@ -25,7 +25,7 @@
   },
   "homepage": "https://github.com/samualtnorman/huffman-encoding#readme",
   "dependencies": {
-    "@types/node": "^13.9.1",
+    "@types/node": "^14.0.24",
     "typescript": "^3.8.3"
   }
 }
