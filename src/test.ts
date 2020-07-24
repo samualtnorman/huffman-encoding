@@ -1,4 +1,4 @@
-import { encode } from "./main"
+import { encode } from "./index"
 import { readFileSync, writeFileSync } from "fs"
 
 //console.log([ ...encode(readFileSync("./main.mjs")) ].map(a => "0".repeat(8 - a.toString(2).length) + a.toString(2)));

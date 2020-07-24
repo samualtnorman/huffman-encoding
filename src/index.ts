@@ -1,6 +1,11 @@
+import { BitStream } from "./lib/bit_stream"
+
 class AssertionError extends Error {
 	constructor(message = "") {
-		super("Asserion failed: " + message);
+		if (message)
+			super(`Asserion failed: ${message}`)
+		else
+			super("Assertion failed")
 	}
 }
 
@@ -9,64 +14,6 @@ interface TreeNode {
 	data?: any
 	left?: TreeNode
 	right?: TreeNode
-}
-
-class BitStream {
-	length = 0
-	buffer: Uint8Array
-
-	constructor(...elements: (boolean | number)[]) {
-		this.buffer = new Uint8Array(0)
-		this.push(...elements)
-
-		return this
-	}
-
-	push(...elements: (boolean | number)[]) {
-		this.allocateSpace(elements.length)
-
-		for (let element of elements) {
-			let byteI = Math.floor(this.length / 8),
-				byte = this.buffer[byteI],
-				mask = 0b10000000 >> (this.length++ % 8)
-
-			this.buffer[byteI] = element ? byte | mask : byte & ~mask
-		}
-
-		return this.length
-	}
-
-	* [Symbol.iterator]() {
-		let i         = 0
-		
-		while (i < this.length)
-			yield !!(this.buffer[Math.floor(this.length / 8)] & (0b10000000 >> (i++ % 8)))
-	}
-
-	private allocateSpace(bitsWanted: number) {
-		let byteCount = Math.ceil((this.length + bitsWanted) / 8)
-
-		if (byteCount > this.buffer.length) {
-			let oldBuffer = this.buffer
-			this.buffer = new Uint8Array(byteCount)
-			this.buffer.set(oldBuffer)
-		}
-	}
-
-	pushByte(...bytes: number[]) {
-		this.allocateSpace(bytes.length * 8)
-
-		for (let byteToWrite of bytes)
-			for (let j = 8; j--;) {
-				let byteI = Math.floor(this.length / 8),
-					byte  = this.buffer[byteI],
-					mask  = 0b10000000 >> (this.length++ % 8)
-
-				this.buffer[byteI] = (byteToWrite & (1 << j)) ? byte | mask : byte & ~mask
-			}
-
-		return this.length
-	}
 }
 
 export function encode(buffer: Buffer) {
@@ -79,7 +26,7 @@ export function encode(buffer: Buffer) {
 			  right = nodes.pop()
 
 		if (!left || !right)
-			throw new AssertionError("popped tree node returned undefined" )
+			throw new AssertionError("popped tree node was undefined" )
 
 		nodes.push({ left, right, frequency: left.frequency + right.frequency })
 	}
@@ -132,16 +79,16 @@ export function encode(buffer: Buffer) {
 
 	function getDepths(tree: TreeNode, layer = 0, depths: { [key: string]: number } = {}) {
 		if ("data" in tree)
-			depths[tree.data] = layer;
+			depths[tree.data] = layer
 		else {
 			if (!tree.left || !tree.right)
-				throw new AssertionError("tree branch unexpectedly undefined");
+				throw new AssertionError("tree branch was unexpectedly undefined")
 
-			getDepths(tree.left , layer + 1, depths);
-			getDepths(tree.right, layer + 1, depths);
+			getDepths(tree.left , layer + 1, depths)
+			getDepths(tree.right, layer + 1, depths)
 		}
 		
-		return depths;
+		return depths
 	}
 }
 
