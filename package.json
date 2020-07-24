@@ -29,9 +29,8 @@
     "url": "https://github.com/samualtnorman/huffman-encoding/issues"
   },
   "homepage": "https://github.com/samualtnorman/huffman-encoding#readme",
-  "dependencies": {},
-  "devDependencies": {
-    "@types/node": "^13.9.1",
-    "typescript": "^3.8.3"
+  "dependencies": {
+    "@types/node": "^14.0.25",
+    "typescript": "^3.9.7"
   }
 }
