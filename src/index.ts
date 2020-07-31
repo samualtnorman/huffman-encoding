@@ -1,5 +1,5 @@
 import { BitStream } from "./lib/bit_stream"
-import { profile } from "./lib/profiling"
+// import { profile } from "./lib/profiling"
 
 interface TreeNode {
 	frequency: number
@@ -127,4 +127,4 @@ function assert(condition: any, message?: string): asserts condition {
 // 	encode
 // }
 
-profile(this)
+// profile(this)

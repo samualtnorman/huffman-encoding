@@ -1,4 +1,4 @@
-import { profile } from "./profiling"
+// import { profile } from "./profiling"
 
 export class BitStream {
 	length = 0
@@ -62,4 +62,4 @@ export default {
 	BitStream
 }
 
-profile(this)
+// profile(this)

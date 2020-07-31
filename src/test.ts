@@ -1,10 +1,10 @@
 // import { encode } from "./index"
 // import { BitStream } from "./lib/bit_stream"
-import { profile } from "./lib/profiling"
+import { replaceObjectFunctions } from "./lib/profiling"
 
-profile(global)
+replaceObjectFunctions(global)
 
-// console.log("success")
+console.log("Hello, World!")
 
 // let bitStream = new BitStream
 
