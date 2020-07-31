@@ -1,10 +1,12 @@
+import { profile } from "./profiling"
+
 export class BitStream {
 	length = 0
 	buffer: Uint8Array
 
 	constructor(...elements: (boolean | number)[]) {
 		this.buffer = new Uint8Array(0)
-		this.push(...elements)
+		elements.length && this.push(...elements)
 
 		return this
 	}
@@ -27,7 +29,7 @@ export class BitStream {
 		let i = 0
 		
 		while (i < this.length)
-			yield !!(this.buffer[Math.floor(this.length / 8)] & (0b10000000 >> (i++ % 8)))
+			yield !!(this.buffer[Math.floor(i / 8)] & (0b10000000 >> (i++ % 8)))
 	}
 
 	private allocateSpace(bitsWanted: number) {
@@ -55,3 +57,9 @@ export class BitStream {
 		return this.length
 	}
 }
+
+export default {
+	BitStream
+}
+
+profile(this)

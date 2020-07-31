@@ -1,8 +1,25 @@
-import { encode } from "./index"
-import { readFileSync, writeFileSync } from "fs"
+// import { encode } from "./index"
+// import { BitStream } from "./lib/bit_stream"
+import { profile } from "./lib/profiling"
 
-//console.log([ ...encode(readFileSync("./main.mjs")) ].map(a => "0".repeat(8 - a.toString(2).length) + a.toString(2)));
+profile(global)
 
-//console.log([ [ "foo" ], [ "bar" ] ].flat())
+// console.log("success")
 
-writeFileSync("encoded", encode(readFileSync("src/main.ts")))
+// let bitStream = new BitStream
+
+// bitStream.pushByte(...encode(Buffer.from("Hello, World!", 'utf8')))
+
+// console.log([ ...bitStream ].map(a => Number(a)).join(""))
+
+// {
+// 	const { log, timeEnd } = console
+
+// 	console.log = function (...args) {
+// 		log("start", ...args, "end")
+// 		// timeEnd()
+// 	}
+
+// 	console.time()
+// 	console.timeEnd()
+// }

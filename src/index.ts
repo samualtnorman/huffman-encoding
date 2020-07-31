@@ -1,13 +1,5 @@
 import { BitStream } from "./lib/bit_stream"
-
-class AssertionError extends Error {
-	constructor(message = "") {
-		if (message)
-			super(`Asserion failed: ${message}`)
-		else
-			super("Assertion failed")
-	}
-}
+import { profile } from "./lib/profiling"
 
 interface TreeNode {
 	frequency: number
@@ -17,7 +9,10 @@ interface TreeNode {
 }
 
 export function encode(buffer: Buffer) {
-	let nodes: TreeNode[] = Object.entries<number>(countArrayItems(buffer)).map(([ data, frequency]) => ({ data, frequency }))
+	const nodes: TreeNode[] = []
+
+	for (const [ data, frequency ] of countArrayItems(buffer))
+		nodes.push({ data, frequency })
 
 	while (nodes.length > 1) {
 		nodes.sort((a, b) => b.frequency - a.frequency)
@@ -25,28 +20,28 @@ export function encode(buffer: Buffer) {
 		const left  = nodes.pop(),
 			  right = nodes.pop()
 
-		if (!left || !right)
-			throw new AssertionError("popped tree node was undefined" )
+		assert(left && right, "popped tree node was undefined")
 
 		nodes.push({ left, right, frequency: left.frequency + right.frequency })
 	}
 
-	const layers: Number[][] = [],
-	      depths = getDepths(nodes[0])
+	const layers: Number[][] = []
+	const depths = getDepths(nodes[0])
 
-	for (let [ byte, depth ] of Object.entries<number>(depths))
+	for (const [ byte, depth ] of depths)
 		(layers[depth] = layers[depth] || []).push(parseInt(byte))
 
-	let bitStream = new BitStream,
-		max = 1,
-		tree = []
+	const outputBitStream = new BitStream
+	const tree = []
+		
+	let max = 1
 
 	for (let layer of layers) {
 		layer = layer || []
 
-		let v = max - layer.length,
-			i = 0,
-			metaTree = []
+		const v = max - layer.length
+		let i = 0
+		const metaTree = []
 		
 		tree.push(v)
 
@@ -62,41 +57,39 @@ export function encode(buffer: Buffer) {
 			i++
 		}
 
-		bitStream.push(...decodeTree(metaTree)[v])
+		outputBitStream.push(...decodeTree(metaTree)[v])
 
 		max = v * 2
 	}
 
-	let keys: number[] = Object.entries(depths).sort((a, b) => b[1] - a[1]).map(a => parseInt(a[0])),
-		encodedBytes   = decodeTree(tree)
+	const keys: number[] = [ ...depths ].sort((a, b) => b[1] - a[1]).map(a => parseInt(a[0]))
+	const encodedBytes   = decodeTree(tree)
 	
-	bitStream.pushByte(...keys)
+	outputBitStream.pushByte(...keys)
 
-	for (let byte of buffer)
-		bitStream.push(...encodedBytes[keys.indexOf(byte)])
+	for (const byte of buffer)
+		outputBitStream.push(...encodedBytes[keys.indexOf(byte)])
 	
-	return bitStream.buffer
+	return outputBitStream.buffer
+}
 
-	function getDepths(tree: TreeNode, layer = 0, depths: { [key: string]: number } = {}) {
-		if ("data" in tree)
-			depths[tree.data] = layer
-		else {
-			if (!tree.left || !tree.right)
-				throw new AssertionError("tree branch was unexpectedly undefined")
-
-			getDepths(tree.left , layer + 1, depths)
-			getDepths(tree.right, layer + 1, depths)
-		}
-		
-		return depths
+function getDepths(tree: TreeNode, layer = 0, depths: Map<any, number> = new Map) {
+	if ("data" in tree)
+		depths.set(tree.data, layer)
+	else {
+		assert(tree.left && tree.right, "tree branch was undefined")
+		getDepths(tree.left , layer + 1, depths)
+		getDepths(tree.right, layer + 1, depths)
 	}
+
+	return depths
 }
 
 function countArrayItems(array: any[] | Buffer) {
-	const usages: { [key: string]: number } = {}
+	const usages = new Map<any, number>()
 
-	for (let item of array)
-		usages[item] = usages[item] + 1 || 1
+	for (const item of array)
+		usages.set(item, usages.get(item) || 0 + 1)
 
 	return usages
 }
@@ -108,14 +101,15 @@ export function decode() {
 function decodeTree(tree: number[]) {
 	const keys: BitStream[] = []
 
-	for (let nodeCount of tree) {
-		const newKeys = []
+	for (const nodeCount of tree) {
+		const newKeys: BitStream[] = []
 
 		for (let i = 0; i < nodeCount; i++) {
 			const original = keys.shift() || new BitStream
 			
 			newKeys.push(new BitStream(...original, 0))
-			newKeys.push(new BitStream(...original, 1))
+			original.push(1)
+			newKeys.push(original)
 		}
 
 		keys.unshift(...newKeys)
@@ -123,3 +117,14 @@ function decodeTree(tree: number[]) {
 
 	return keys
 }
+
+function assert(condition: any, message?: string): asserts condition {
+    if (!condition)
+		throw new Error(message || "Assertion failed")
+}
+
+// export default {
+// 	encode
+// }
+
+profile(this)

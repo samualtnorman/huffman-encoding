@@ -10,7 +10,9 @@
   ],
   "scripts": {
     "test": "node built/test",
-    "build": "npx tsc"
+    "build": "npx tsc",
+    "build-watch": "npx tsc --watch",
+    "test-watch": "nodemon test.js"
   },
   "repository": {
     "type": "git",
@@ -32,5 +34,9 @@
   "dependencies": {
     "@types/node": "^14.0.27",
     "typescript": "^3.9.7"
+  },
+  "devDependencies": {
+    "chalk": "^4.1.0",
+    "nodemon": "^2.0.4"
   }
 }
